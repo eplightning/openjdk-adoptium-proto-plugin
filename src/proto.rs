@@ -57,7 +57,6 @@ pub fn download_prebuilt(
         &env,
         permutations![
             HostOS::Linux => [
-                HostArch::X86,
                 HostArch::X64,
                 HostArch::Arm64,
                 HostArch::Arm,

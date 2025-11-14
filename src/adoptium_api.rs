@@ -1,5 +1,5 @@
 use extism_pdk::FnResult;
-use proto_pdk::{fetch_json, HostEnvironment, HostLibc, HostOS};
+use proto_pdk::{fetch_json, HostArch, HostEnvironment, HostLibc, HostOS};
 use serde::Deserialize;
 use url::Url;
 
@@ -38,7 +38,12 @@ pub struct ReleaseVersions {
 }
 
 fn env_to_arch_and_os(env: &HostEnvironment) -> (String, String) {
-    let architecture = env.arch.to_string();
+    let architecture = match env.arch {
+        HostArch::Arm64 => "aarch64".into(),
+        HostArch::Powerpc64 => "ppc64le".into(),
+        arch => arch.to_string(),
+    };
+
     let os = match (env.os, env.libc) {
         (HostOS::Linux, HostLibc::Musl) => "alpine-linux".into(),
         (HostOS::MacOS, _) => "mac".into(),
