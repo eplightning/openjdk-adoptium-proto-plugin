@@ -94,7 +94,10 @@ pub fn locate_executables(
 
     let exes: FxHashMap<String, _> = JDK_BINS.into_iter().map(|bin| {
         let exe_name = env.os.get_exe_name(bin);
-        let exe_path = format!("bin/{exe_name}");
+        let exe_path = match env.os {
+            HostOS::MacOS => format!("Contents/Home/bin/{exe_name}"),
+            _ => format!("bin/{exe_name}")
+        };
 
         let config = match bin {
             "java" => ExecutableConfig::new_primary(exe_path),
@@ -104,8 +107,13 @@ pub fn locate_executables(
         (String::from(bin), config)
     }).collect();
 
+    let exes_dirs = match env.os {
+        HostOS::MacOS => vec!["Contents/Home/bin".into()],
+        _ => vec!["bin".into()]
+    };
+
     Ok(Json(LocateExecutablesOutput {
-        exes_dirs: vec!["bin".into()],
+        exes_dirs,
         exes,
         ..LocateExecutablesOutput::default()
     }))
