@@ -1,0 +1,53 @@
+name: Pull request
+
+on:
+  pull_request:
+    branches:
+      - main
+
+jobs:
+
+  cargo-fmt:
+    name: Format
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: moonrepo/setup-rust@v1
+        with:
+          cache: false
+          components: rustfmt
+
+      - run: cargo fmt --all --check
+
+  clippy:
+    name: Lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: moonrepo/setup-rust@v1
+        with:
+          cache: false
+          components: clippy
+
+      - run: cargo clippy --workspace --all-targets
+
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: moonrepo/setup-rust@v1
+        with:
+          cache: false
+          bins: cargo-nextest
+          targets: wasm32-wasip1
+
+      - uses: moonrepo/setup-toolchain@v0
+
+      - id: build
+        uses: moonrepo/build-wasm-plugin@v0
+
+      - run: cargo nextest run --no-default-features

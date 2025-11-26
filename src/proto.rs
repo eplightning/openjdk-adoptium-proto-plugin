@@ -1,17 +1,11 @@
+use crate::adoptium_api::{fetch_release_asset, fetch_release_versions};
 use extism_pdk::*;
 use proto_pdk::*;
 use rustc_hash::FxHashMap;
-use crate::adoptium_api::{fetch_release_asset, fetch_release_versions};
 
 static NAME: &str = "Eclipse Adoptium OpenJDK";
 
-static JDK_BINS: [&str; 5] = [
-    "java",
-    "javac",
-    "javadoc",
-    "jar",
-    "keytool"
-];
+static JDK_BINS: [&str; 5] = ["java", "javac", "javadoc", "jar", "keytool"];
 
 fn semver_to_release(semver: &Version) -> String {
     if semver.major >= 9 {
@@ -45,9 +39,11 @@ pub fn register_tool(Json(_): Json<RegisterToolInput>) -> FnResult<Json<Register
 pub fn download_prebuilt(
     Json(input): Json<DownloadPrebuiltInput>,
 ) -> FnResult<Json<DownloadPrebuiltOutput>> {
-    let version = input.context.version.as_version().ok_or(PluginError::Message(
-        "Unsupported version type.".into()
-    ))?;
+    let version = input
+        .context
+        .version
+        .as_version()
+        .ok_or(PluginError::Message("Unsupported version type.".into()))?;
 
     let env = get_host_environment()?;
     let release = semver_to_release(version);
@@ -69,7 +65,8 @@ pub fn download_prebuilt(
     )?;
 
     let asset = fetch_release_asset(&env, &release)?;
-    let binary = asset.binaries
+    let binary = asset
+        .binaries
         .into_iter()
         .next()
         .ok_or(PluginError::Message("API returned no binaries.".into()))?;
@@ -92,24 +89,27 @@ pub fn locate_executables(
 ) -> FnResult<Json<LocateExecutablesOutput>> {
     let env = get_host_environment()?;
 
-    let exes: FxHashMap<String, _> = JDK_BINS.into_iter().map(|bin| {
-        let exe_name = env.os.get_exe_name(bin);
-        let exe_path = match env.os {
-            HostOS::MacOS => format!("Contents/Home/bin/{exe_name}"),
-            _ => format!("bin/{exe_name}")
-        };
+    let exes: FxHashMap<String, _> = JDK_BINS
+        .into_iter()
+        .map(|bin| {
+            let exe_name = env.os.get_exe_name(bin);
+            let exe_path = match env.os {
+                HostOS::MacOS => format!("Contents/Home/bin/{exe_name}"),
+                _ => format!("bin/{exe_name}"),
+            };
 
-        let config = match bin {
-            "java" => ExecutableConfig::new_primary(exe_path),
-            _ => ExecutableConfig::new(exe_path),
-        };
+            let config = match bin {
+                "java" => ExecutableConfig::new_primary(exe_path),
+                _ => ExecutableConfig::new(exe_path),
+            };
 
-        (String::from(bin), config)
-    }).collect();
+            (String::from(bin), config)
+        })
+        .collect();
 
     let exes_dirs = match env.os {
         HostOS::MacOS => vec!["Contents/Home/bin".into()],
-        _ => vec!["bin".into()]
+        _ => vec!["bin".into()],
     };
 
     Ok(Json(LocateExecutablesOutput {
@@ -124,15 +124,19 @@ pub fn load_versions(Json(_): Json<LoadVersionsInput>) -> FnResult<Json<LoadVers
     let env = get_host_environment()?;
     let releases = fetch_release_versions(&env)?;
 
-    let versions: Vec<String> = releases.versions.into_iter().map(|release| {
-        format!(
-            "{major}.{minor}.{patch}+{build}",
-            major = release.major,
-            minor = release.minor,
-            patch = release.patch,
-            build = release.build
-        )
-    }).collect();
+    let versions: Vec<String> = releases
+        .versions
+        .into_iter()
+        .map(|release| {
+            format!(
+                "{major}.{minor}.{patch}+{build}",
+                major = release.major,
+                minor = release.minor,
+                patch = release.patch,
+                build = release.build
+            )
+        })
+        .collect();
 
     Ok(Json(LoadVersionsOutput::from(versions)?))
 }

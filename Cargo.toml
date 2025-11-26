@@ -15,6 +15,11 @@ rustc-hash = "2.1.1"
 serde = "1"
 url = "2"
 
+[dev-dependencies]
+proto_pdk_test_utils = "0.42.1"
+starbase_sandbox = "0.10.2"
+tokio = "1.48.0"
+
 [features]
 default = ["wasm"]
 wasm = []
