@@ -45,6 +45,8 @@ jobs:
           bins: cargo-nextest
           targets: wasm32-wasip1
 
+      - uses: moonrepo/setup-toolchain@v0
+
       - id: build
         uses: moonrepo/build-wasm-plugin@v0
 
