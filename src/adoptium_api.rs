@@ -1,5 +1,5 @@
 use extism_pdk::FnResult;
-use proto_pdk::{fetch_json, HostArch, HostEnvironment, HostLibc, HostOS};
+use proto_pdk::{HostArch, HostEnvironment, HostLibc, HostOS, fetch_json};
 use serde::Deserialize;
 use url::Url;
 
@@ -7,7 +7,7 @@ const API_BASE_URL: &str = "https://api.adoptium.net";
 
 #[derive(Deserialize)]
 pub struct Asset {
-    pub binaries: Vec<AssetBinary>
+    pub binaries: Vec<AssetBinary>,
 }
 
 #[derive(Deserialize)]
@@ -56,8 +56,10 @@ fn env_to_arch_and_os(env: &HostEnvironment) -> (String, String) {
 pub fn fetch_release_asset(env: &HostEnvironment, release: &str) -> FnResult<Asset> {
     let mut url = Url::parse(&format!("{API_BASE_URL}/v3/assets/release_name"))?;
 
-    url.path_segments_mut().unwrap()
-        .push("eclipse").push(release);
+    url.path_segments_mut()
+        .unwrap()
+        .push("eclipse")
+        .push(release);
 
     let (architecture, os) = env_to_arch_and_os(env);
 
@@ -99,7 +101,9 @@ pub fn fetch_release_versions(env: &HostEnvironment) -> FnResult<ReleaseVersions
         page += 1;
 
         let mut page_url = url.clone();
-        page_url.query_pairs_mut().append_pair("page", &page.to_string());
+        page_url
+            .query_pairs_mut()
+            .append_pair("page", &page.to_string());
 
         match fetch_json::<&str, ReleaseVersions>(page_url.as_str()) {
             Ok(page_versions) => {
@@ -115,4 +119,3 @@ pub fn fetch_release_versions(env: &HostEnvironment) -> FnResult<ReleaseVersions
 
     Ok(versions)
 }
-
