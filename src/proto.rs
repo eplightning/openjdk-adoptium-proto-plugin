@@ -124,7 +124,7 @@ pub fn load_versions(Json(_): Json<LoadVersionsInput>) -> FnResult<Json<LoadVers
     let env = get_host_environment()?;
     let releases = fetch_release_versions(&env)?;
 
-    let versions: Vec<String> = releases
+    let versions = releases
         .versions
         .into_iter()
         .map(|release| {
@@ -136,7 +136,22 @@ pub fn load_versions(Json(_): Json<LoadVersionsInput>) -> FnResult<Json<LoadVers
                 build = release.build
             )
         })
-        .collect();
+        .map(|version| VersionSpec::parse(&version))
+        .collect::<Result<Vec<_>, _>>()?;
 
-    Ok(Json(LoadVersionsOutput::from(versions)?))
+    let latest = versions
+        .first()
+        .and_then(|v| v.as_version())
+        .cloned()
+        .unwrap_or(Version::new(0, 0, 0));
+
+    let mut aliases = FxHashMap::default();
+    aliases.insert("latest".into(), UnresolvedVersionSpec::Semantic(SemVer(latest.clone())));
+
+    Ok(Json(LoadVersionsOutput {
+        versions,
+        aliases,
+        latest: Some(UnresolvedVersionSpec::Semantic(SemVer(latest))),
+        ..Default::default()
+    }))
 }
