@@ -146,7 +146,10 @@ pub fn load_versions(Json(_): Json<LoadVersionsInput>) -> FnResult<Json<LoadVers
         .unwrap_or(Version::new(0, 0, 0));
 
     let mut aliases = FxHashMap::default();
-    aliases.insert("latest".into(), UnresolvedVersionSpec::Semantic(SemVer(latest.clone())));
+    aliases.insert(
+        "latest".into(),
+        UnresolvedVersionSpec::Semantic(SemVer(latest.clone())),
+    );
 
     Ok(Json(LoadVersionsOutput {
         versions,
