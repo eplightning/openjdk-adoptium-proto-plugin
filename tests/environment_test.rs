@@ -8,7 +8,9 @@ mod openjdk_adoptium_tool {
         let sandbox = create_empty_proto_sandbox();
         let plugin = sandbox.create_plugin("java-test").await;
 
-        let output = plugin.activate_environment(ActivateEnvironmentInput::default()).await;
+        let output = plugin
+            .activate_environment(ActivateEnvironmentInput::default())
+            .await;
 
         assert!(output.env.contains_key("JAVA_HOME"));
     }
