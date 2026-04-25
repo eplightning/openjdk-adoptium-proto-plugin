@@ -10,15 +10,15 @@ crate-type = ["cdylib"]
 
 [dependencies]
 extism-pdk = "1.4.1"
-proto_pdk = "0.32.2"
-rustc-hash = "2.1.1"
+proto_pdk = "0.32.8"
+rustc-hash = "2.1.2"
 serde = "1"
 url = "2"
 
 [dev-dependencies]
-proto_pdk_test_utils = "0.42.1"
-starbase_sandbox = "0.10.2"
-tokio = "1.48.0"
+proto_pdk_test_utils = "0.44.2"
+starbase_sandbox = "0.11.0"
+tokio = "1"
 
 [features]
 default = ["wasm"]
