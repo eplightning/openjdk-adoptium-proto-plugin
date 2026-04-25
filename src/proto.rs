@@ -36,6 +36,39 @@ pub fn register_tool(Json(_): Json<RegisterToolInput>) -> FnResult<Json<Register
 }
 
 #[plugin_fn]
+pub fn detect_version_files(_: ()) -> FnResult<Json<DetectVersionOutput>> {
+    Ok(Json(DetectVersionOutput {
+        files: vec![".java-version".into()],
+        ignore: vec![],
+    }))
+}
+
+#[plugin_fn]
+pub fn parse_version_file(
+    Json(input): Json<ParseVersionFileInput>,
+) -> FnResult<Json<ParseVersionFileOutput>> {
+    let mut version = None;
+
+    if input.file == ".java-version" {
+        let content = input.content.trim();
+
+        // Strip the flavor prefix (e.g., 'temurin-17.0.16+8' -> '17.0.16+8')
+        // by finding the first numeric digit and slicing from there.
+        let version_str = if let Some(idx) = content.find(|c: char| c.is_ascii_digit()) {
+            &content[idx..]
+        } else {
+            content
+        };
+
+        if !version_str.is_empty() {
+            version = Some(UnresolvedVersionSpec::parse(version_str)?);
+        }
+    }
+
+    Ok(Json(ParseVersionFileOutput { version }))
+}
+
+#[plugin_fn]
 pub fn download_prebuilt(
     Json(input): Json<DownloadPrebuiltInput>,
 ) -> FnResult<Json<DownloadPrebuiltOutput>> {
