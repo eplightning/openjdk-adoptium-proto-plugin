@@ -69,6 +69,30 @@ pub fn parse_version_file(
 }
 
 #[plugin_fn]
+pub fn activate_environment(
+    Json(input): Json<ActivateEnvironmentInput>,
+) -> FnResult<Json<ActivateEnvironmentOutput>> {
+    let tool_dir = input
+        .context
+        .tool_dir
+        .real_path_string()
+        .ok_or(PluginError::Message(
+            "Could not determine real tool directory".into(),
+        ))?;
+    let env = get_host_environment()?;
+
+    let java_home = match env.os {
+        HostOS::MacOS => format!("{tool_dir}/Contents/Home"),
+        _ => tool_dir,
+    };
+
+    Ok(Json(ActivateEnvironmentOutput {
+        env: [("JAVA_HOME".into(), java_home)].into_iter().collect(),
+        ..ActivateEnvironmentOutput::default()
+    }))
+}
+
+#[plugin_fn]
 pub fn download_prebuilt(
     Json(input): Json<DownloadPrebuiltInput>,
 ) -> FnResult<Json<DownloadPrebuiltOutput>> {
