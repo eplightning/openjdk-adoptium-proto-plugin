@@ -8,18 +8,24 @@ static NAME: &str = "Eclipse Adoptium OpenJDK";
 static JDK_BINS: [&str; 5] = ["java", "javac", "javadoc", "jar", "keytool"];
 
 fn semver_to_release(semver: &Version) -> String {
+    let build = if let Some(build_version) = &semver.build {
+        build_version.to_string()
+    } else {
+        "1".to_string()
+    };
+
     if semver.major >= 9 {
-        match (semver.major, semver.minor, semver.patch, &semver.build) {
-            (major, 0, 0, build) => format!("jdk-{}+{}", major, build),
-            (major, minor, 0, build) => format!("jdk-{}.{}+{}", major, minor, build),
-            (major, minor, patch, build) => format!("jdk-{}.{}.{}+{}", major, minor, patch, build),
+        match (semver.major, semver.minor, semver.patch) {
+            (major, 0, 0) => format!("jdk-{}+{}", major, build),
+            (major, minor, 0) => format!("jdk-{}.{}+{}", major, minor, build),
+            (major, minor, patch) => format!("jdk-{}.{}.{}+{}", major, minor, patch, build),
         }
     } else {
         // jdk8u412-b08
-        if semver.build.len() == 1 {
-            format!("jdk{}u{}-b0{}", semver.major, semver.patch, semver.build)
+        if build.len() == 1 {
+            format!("jdk{}u{}-b0{}", semver.major, semver.patch, build)
         } else {
-            format!("jdk{}u{}-b{}", semver.major, semver.patch, semver.build)
+            format!("jdk{}u{}-b{}", semver.major, semver.patch, build)
         }
     }
 }
@@ -29,7 +35,7 @@ pub fn register_tool(Json(_): Json<RegisterToolInput>) -> FnResult<Json<Register
     Ok(Json(RegisterToolOutput {
         name: NAME.into(),
         type_of: PluginType::Language,
-        minimum_proto_version: Some(Version::new(0, 46, 0)),
+        minimum_proto_version: Some(Version::new(0, 60, 0)),
         plugin_version: Version::parse(env!("CARGO_PKG_VERSION")).ok(),
         ..RegisterToolOutput::default()
     }))
@@ -75,7 +81,7 @@ pub fn activate_environment(
     let tool_dir = input
         .context
         .tool_dir
-        .real_path_string()
+        .to_real_path()?
         .ok_or(PluginError::Message(
             "Could not determine real tool directory".into(),
         ))?;
@@ -83,7 +89,7 @@ pub fn activate_environment(
 
     let java_home = match env.os {
         HostOS::MacOS => format!("{tool_dir}/Contents/Home"),
-        _ => tool_dir,
+        _ => tool_dir.to_string(),
     };
 
     Ok(Json(ActivateEnvironmentOutput {
@@ -205,13 +211,13 @@ pub fn load_versions(Json(_): Json<LoadVersionsInput>) -> FnResult<Json<LoadVers
     let mut aliases = FxHashMap::default();
     aliases.insert(
         "latest".into(),
-        UnresolvedVersionSpec::Semantic(SemVer(latest.clone())),
+        UnresolvedVersionSpec::Version(latest.clone()),
     );
 
     Ok(Json(LoadVersionsOutput {
         versions,
         aliases,
-        latest: Some(UnresolvedVersionSpec::Semantic(SemVer(latest))),
+        latest: Some(UnresolvedVersionSpec::Version(latest)),
         ..Default::default()
     }))
 }
