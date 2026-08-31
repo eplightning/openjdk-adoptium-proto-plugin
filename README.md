@@ -4,6 +4,11 @@ Java plugin for proto, using Eclipse Adoptium OpenJDK distribution.
 
 This plugin uses [https://api.adoptium.net/](Adoptium API) to fetch available versions and to provide download URLs to proto.
 
+## Deprecation notice
+
+New proto version introduced built-in Java plugin that covers everything this plugin did.
+Therefore, this plugin will cease any development after the built-in plugin stabilizes.
+
 ## Installation
 
 Register the plugin by adding the following to your `.prototools` file:
